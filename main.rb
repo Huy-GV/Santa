@@ -7,16 +7,10 @@ require './monsters.rb'
 require './platform.rb'
 require './trap.rb'
 
-#CHANGES COMPARED TO VERSION 1: Santa'x coordinate is fixed to improve performance (moderately) and a tutorial option is added
-
 HEIGHT = 800
 WIDTH = 1200
 FULL_BACKGROUND_WIDTH = 1741
 GROUND = 630
-
-MAX_TRAP_AMOUNT = 2
-MAX_MONSTER_AMOUNT = 4
-MAX_PLATFORM_AMOUNT = 3
 
 module ZOrder
   BACKGROUND1, BACKGROUND2, BACKGROUND3, BACKGROUND4, TRAP, GROUND, PLAYER, UI = *1..8
@@ -34,33 +28,11 @@ class SantaGame < Gosu::Window
         self.caption = "Game"
  
         @audio = Gosu::Song.new("media/soundtrack.mp3")
+        @audio.play(true)
+
         @difficulty = 3
 
-        @stamina_cost = 0.5
-        @score_gain = 1 / 60.to_f
-
-        case @difficulty
-        when 3
-            @monster_frequency = 250
-            @fly_frequency = 300
-            @monster_damage = 1.3 / 60.to_f
-            @aerial_monster_damage = 0.02
-            @platform_frequency = 200
-        when 2
-            @monster_frequency = 230
-            @fly_frequency = 270
-            @monster_damage = 1.5 / 60.to_f
-            @aerial_monster_damage = 0.03
-            @platform_frequency = 220
-        when 1
-            @monster_frequency = 200
-            @fly_frequency = 250
-            @monster_damage = 1.7 / 60.to_f
-            @aerial_monster_damage = 0.04
-            @platform_frequency = 240
-        end
-
-        @santa = Santa.new(400, GROUND, @difficulty)
+        @santa = Santa.new(300, GROUND)
         @map = Map.new
         @interface = Interface.new(@difficulty)
 
@@ -69,6 +41,36 @@ class SantaGame < Gosu::Window
         @platform_set = Array.new
         @trap_set = Array.new
         @scene = :menu
+
+        case @difficulty
+        when 3
+            @monster_frequency = 270
+            @fly_frequency = 330
+            @stamina_loss = 0.4
+            @monster_damage = 1 / 60.to_f
+            @aerial_monster_damage = 0.25
+            @score_gain = 1/60.to_f
+            @platform_frequency = 180
+            @trap_frequency = 250
+        when 2
+            @monster_frequency = 250
+            @fly_frequency = 230
+            @stamina_loss = 0.5
+            @monster_damage = 1.5 / 60.to_f
+            @aerial_monster_damage = 0.35
+            @score_gain = 1.5/60.to_f
+            @platform_frequency = 200
+            @trap_frequency = 230
+        when 1
+            @monster_frequency = 230
+            @fly_frequency = 270
+            @stamina_loss = 0.6
+            @monster_damage = 1.7 / 60.to_f
+            @aerial_monster_damage = 0.45
+            @score_gain = 2/60.to_f
+            @platform_frequency = 220
+            @trap_frequency = 210
+        end
 
         @pause_message = 'GAME PAUSED'
         @prompt = 'RESUME'
@@ -82,8 +84,6 @@ class SantaGame < Gosu::Window
         case @scene
         when :menu
             @interface.draw_menu_options(@difficulty, @high_score)
-        when :tutorial
-            @interface.draw_tutorial 
         when :paused
             @interface.draw_pause_options(@pause_message, @prompt)
             @santa.draw if @santa.is_alive
@@ -117,78 +117,83 @@ class SantaGame < Gosu::Window
                     spike.draw
                 }
             end
+
         end
+
     end
 
-    def in_monster_range?(monster_x, player_y)
-        monster_x.between?(390, 460) and player_y == GROUND ? true : false
+    def in_monster_range?(monster_x, monster_y, player_x, player_y)
+        (monster_x - player_x).between?(-70, 70) and (monster_y - player_y).abs < 65 ? true : false
+    end
+    # santa loses stamina + health when hit by fly 
+    def in_fly_range?(fly_x, fly_y, player_x, player_y)
+        (fly_x - player_x).between?(-40, 40) and (fly_y - player_y).between?(-40, 40) ? true : false
     end
 
-    def in_fly_range?(fly_x, player_y)
-        fly_x.between?(360, 440) and player_y.between?(-360, 440) ? true : false
+    def in_trap_range?(player_x, player_y, trap_x)
+        (trap_x - player_x).between?(-50, 50) and player_y.between?(600, GROUND) ? true : false
     end
 
-    def in_santa_range?(monster_x, player_y)
-        monster_x.between?(390, 480)and player_y == GROUND ? true : false
+    def in_platform_range?(player_x, player_y, platform_x, platform_y)
+        player_x.between?(platform_x - 115, platform_x + 115) and player_y.between?(415,421) ? true : false
     end
 
-    def in_trap_range?(player_y, trap_x)
-        trap_x.between?(390, 410) and player_y == GROUND ? true : false
-    end
+    def on_any_platform?(player_x, player_y, platform_set)
+        # for i in 0..(platform_set.size - 1)
+        #     if in_platform_range?(player_x, player_y, platform_set[i].x, platform_set[i].y)
+        #         return true
+        #     end
+        # end
 
-    def in_platform_range?(player_y, platform_x)
-        platform_x.between?(290, 510) and player_y.between?(415,421) ? true : false
+        platform_set.each{|platform| if in_platform_range?(player_x, player_y, platform.x, platform.y) then return true end}
+        return false
     end
 
     def needs_cursor?; true; end
 
     def update
-
+        if ((@santa.y == GROUND or @santa.on_platform) and
+            @santa.stamina > 0.6 and 
+            !@santa.is_sliding and 
+            !@santa.is_jumping)
+            @santa.can_jump = true
+        else
+            @santa.can_jump = false
+        end
+      
         case @scene
         when :menu
-            @audio.pause
-            @stamina_cost = 0.5
-            @score_gain = 1 / 60.to_f
-
             case @difficulty
             when 3
                 @monster_frequency = 250
                 @fly_frequency = 300
-                @monster_damage = 1.3 / 60.to_f
-                @aerial_monster_damage = 0.02
-                @platform_frequency = 200
+                @stamina_loss = 0.6
+                @monster_damage = 1 / 60.to_f
+                @aerial_monster_damage = 0.3
+                @score_gain = 1 / 60.to_f
             when 2
                 @monster_frequency = 230
                 @fly_frequency = 270
+                @stamina_loss = 0.7
                 @monster_damage = 1.5 / 60.to_f
-                @aerial_monster_damage = 0.03
-                @platform_frequency = 220
+                @aerial_monster_damage = 0.4
+                @score_gain = 2 / 60.to_f
             when 1
                 @monster_frequency = 200
                 @fly_frequency = 250
+                @stamina_loss = 0.8
                 @monster_damage = 1.7 / 60.to_f
-                @aerial_monster_damage = 0.04
-                @platform_frequency = 240
+                @aerial_monster_damage = 0.5
+                @score_gain = 3 / 60.to_f
             end
         when :paused
-
-            @audio.play(false)
             @santa.update
-            if @santa.is_dying then @santa.die(@die_offset) end
-        when :playing
-
-            if ((@santa.y == GROUND or @santa.on_platform) and
-                @santa.stamina >= @stamina_cost and 
-                !@santa.is_sliding and 
-                !@santa.is_jumping)
-    
-                @santa.can_jump = true
-            else
-                @santa.can_jump = false
+            if @santa.is_dying
+                @audio.pause
+                @santa.die(@die_offset)
             end
-
-            @audio.play(false)
-            @map.roll
+        when :playing
+            # @map.roll
             @santa.update
             @interface.update(@score_gain)
 
@@ -214,20 +219,15 @@ class SantaGame < Gosu::Window
                         monster.die(monster.die_offset)
                     end
 
-                    #player has a longer attack range than monsters
-                    if (in_monster_range?(monster.x, @santa.y) and 
-                        monster.action != 'DYING' and
-                        !@santa.is_sliding)
-
+                    if in_monster_range?(monster.x, monster.y, @santa.x, @santa.y) and monster.action != 'DYING'
                         monster.action = 'ATTACKING'
-                        @santa.health -= @monster_damage 
-                    elsif (in_santa_range?(monster.x, @santa.y) and 
-                        monster.action != 'DYING' and
-                        @santa.is_sliding)
-
+                        if @santa.is_sliding
                             monster.die_offset = Gosu.milliseconds
                             monster.action = 'DYING'
                             monster.is_hit = true
+                        else
+                            @santa.health -= @monster_damage
+                        end
                     elsif !monster.is_hit
                         monster.action = monster.original_action
                     end
@@ -241,30 +241,38 @@ class SantaGame < Gosu::Window
                 @aerial_monster_horde.each {|fly|
                     fly.update
                     fly.move
-                    if in_fly_range?(fly.x, @santa.y)
-                        @santa.stamina >= 0.5 ? @santa.stamina -= @stamina_cost : @santa.stamina = 0
+                    if in_fly_range?(fly.x, fly.y, @santa.x, @santa.y)
+                        @santa.stamina >= 0.5 ? @santa.stamina -= @stamina_loss : @santa.stamina = 0
                     end
                 }
                 @aerial_monster_horde.reject!{|fly| fly.x < -30 }
             end
 
             unless @platform_set.size == 0
-                @platform_set.each { |platform| platform.update }
-                @platform_set.reject! {|platform| platform.x < -110 }
-                @santa.on_platform = in_platform_range?(@santa.y, @platform_set[0].x)
+                @platform_set.each { |platform|
+                    platform.update
+                }
+
+                @platform_set.reject! {|platform|
+                    platform.x < -110
+                }
+
+                @santa.on_platform = on_any_platform?(@santa.x, @santa.y, @platform_set)
             end
 
             unless @trap_set.size == 0
-                @trap_set.reject! {|trap| trap.x < -40 }
+                @trap_set.reject! {|trap|
+                    trap.x < -40
+                }
 
                 @trap_set.each {|trap|
                     trap.update
-                    if (trap.x < 620) then trap.has_spiked = true end
-                    if in_trap_range?(@santa.y, trap.x) then @santa.health -= 0.9 / 40 end
+                    if (trap.x - @santa.x < 220) then trap.has_spiked = true end
+                    if in_trap_range?(@santa.x, @santa.y, trap.x) then @santa.health -= 0.9 / 40 end
                 }
             end
 
-            if rand(@monster_frequency) == 0 and @monster_horde.size < MAX_MONSTER_AMOUNT
+            if rand(@monster_frequency) == 0 and @monster_horde.size < 5
                 monster_type = Monster_Type[rand(0..(Monster_Type.size - 1))]
                 monster_action = Monster_Action[rand(0..(Monster_Action.size - 1))]
                 monster_height = GROUND
@@ -279,7 +287,7 @@ class SantaGame < Gosu::Window
                 @monster_horde << Monster.new(monster_x, monster_height, monster_type, monster_action)
             end
 
-            if rand(@fly_frequency) == 0 and @aerial_monster_horde.size < MAX_MONSTER_AMOUNT
+            if rand(@fly_frequency) == 0 and @aerial_monster_horde.size < 4
                 aerial_monster_type = Aerial_Monster[rand(0..(Aerial_Monster.size - 1))]
                 if @aerial_monster_horde.size == 0
                     fly_x = 1250
@@ -291,18 +299,17 @@ class SantaGame < Gosu::Window
                 @aerial_monster_horde << Flying_Goblin.new(fly_x, 400, aerial_monster_type, 'MOVING')
             end
 
-            if rand(@platform_frequency) == 0 and @platform_set.size < MAX_PLATFORM_AMOUNT
+            if rand(@platform_frequency) == 0 and @platform_set.size < 3
                 if @platform_set.size == 0
                     platform_x = 1500
                 else
                     last_platform = @platform_set[@platform_set.size - 1]
-                    last_platform.x < 700 ? platform_x = 1500 : platform_x = last_platform.x + 800
+                    last_platform.x < 700 ? platform_x = 1400 : platform_x = last_platform.x + 700
                 end
-
                 @platform_set << Platform.new(platform_x, 500)
             end
 
-            if rand(@trap_frequency) == 0 and @trap_set.size < MAX_TRAP_AMOUNT
+            if rand(@trap_frequency) == 0 and @trap_set.size < 2
                 if @trap_set.size == 0 
                     trap_x = 1300
                 else
@@ -314,14 +321,24 @@ class SantaGame < Gosu::Window
             end
 
             if !(@santa.is_jumping or @santa.is_sliding)
-                @santa.run_forward
+                if (button_down?(Gosu::KB_D))
+                    @santa.run_forward
+                    @santa.is_sliding = false
+                elsif (button_down?(Gosu::KB_A))
+                    @santa.run_backward
+                    @santa.is_sliding = false
+                else
+                    @santa.idle
+                end
             elsif @santa.is_jumping
                 @santa.is_sliding = false
                 @santa.jump(@jump_offset)
+                @santa.x += 4 if button_down?(Gosu::KB_D)
             elsif @santa.is_sliding
                 @santa.is_jumping = false
                 @santa.slide(@slide_offset)
             end
+
         end
     end
 
@@ -335,7 +352,6 @@ class SantaGame < Gosu::Window
             record_file.close
             return high_score
         end
-
         return record_high_score
     end
 
@@ -344,8 +360,7 @@ class SantaGame < Gosu::Window
         @platform_set.clear
         @trap_set.clear
         @interface.score = 0
-        @difficulty = 3
-        @santa = Santa.new(400, GROUND, @difficulty)
+        @santa = Santa.new(300, GROUND)
         @map = Map.new
     end
         
@@ -355,17 +370,16 @@ class SantaGame < Gosu::Window
             if @santa.can_jump
                 @santa.vy = -25
                 @jump_offset = Gosu.milliseconds
-                @santa.stamina -= @stamina_cost
+                @santa.stamina -= @stamina_loss
             end
         when Gosu::KB_S
             if (@santa.y == GROUND and
-
-                @santa.slide_cooldown == 3 and
+                @santa.slide_cooldown == @difficulty and
                 !@santa.is_jumping and
                 !@santa.is_sliding)
 
                 @slide_offset = Gosu.milliseconds
-                @santa.vx = -20
+                @santa.vx = -13
                 @santa.slide_cooldown = 0
             end
         when Gosu::MsLeft
@@ -376,8 +390,6 @@ class SantaGame < Gosu::Window
                 elsif mouse_y.between?(300, 400) and mouse_x.between?(450, 800)
                     @difficulty > 1 ? @difficulty -= 1 : @difficulty = 3
                 elsif mouse_y.between?(500, 600) and mouse_x.between?(450, 800)
-                    @scene = :tutorial
-                elsif mouse_y.between?(600, 700) and mouse_x.between?(450, 800)
                     close
                 end
             when :paused
@@ -387,12 +399,9 @@ class SantaGame < Gosu::Window
                     @scene = :playing
                 elsif mouse_y.between?(500, 600) and mouse_x.between?(450, 800)
                     #quitting the game
+                    @santa = Santa.new(300, GROUND)
                     @high_score = update_record(@interface.score)
                     reset_game
-                    @scene = :menu
-                end
-            when :tutorial
-                if mouse_y.between?(600, 700) and mouse_x.between?(450, 600)
                     @scene = :menu
                 end
             end
