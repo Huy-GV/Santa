@@ -7,7 +7,7 @@ class Map
         @ground1 = @ground2 = Gosu::Image.new("media/backgrounds/ground.png")
         @close1 = @close2 = Gosu::Image.new("media/backgrounds/close.png")
         @far_x1 = @mid_x1 = @close_x1 = @ground_x1 = WIDTH / 2
-        @far_x2 = @mid_x2 = @close_x2 = WIDTH / 2 + FULL_BACKGROUND_WIDTH * 1.9
+        @far_x2 = @mid_x2 = @close_x2 = WIDTH / 2 + FULL_BACKGROUND_WIDTH * 1.8
         @ground_x2 = WIDTH / 2 + 2970
     end
 
