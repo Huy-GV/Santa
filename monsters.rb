@@ -7,6 +7,7 @@ class Monster
         @die_offset = 0
         @is_alive = true
         @is_hit = false
+        
         case @type  
         when "DRAGON"
             @idle_image = Gosu::Image.load_tiles("media/monsters/dragon_idle.png",964/3,320)
@@ -37,7 +38,6 @@ class Monster
     end
 
     def draw
-
         @current_image.draw_rot(@x, @y, ZOrder::PLAYER, 0)
     end
 
@@ -61,7 +61,7 @@ class Monster
         when 'FLY'
             @current_image = @move_image[Gosu.milliseconds / 110 % 6]
         end
-        @x -= 5
+        @x -= 6
     end
 
     def attack
@@ -73,7 +73,7 @@ class Monster
         when 'DRAGON'
             @current_image = @attack_image[Gosu.milliseconds / 140 % 4]
         end
-        @x -= 2
+        @x -= 1.7
     end
 
     def die(die_offset)
@@ -85,6 +85,6 @@ end
 
 class Flying_Goblin < Monster
     def update
-        @x -= 3
+        @x -= 3.5
     end
 end
