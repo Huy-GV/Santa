@@ -1,6 +1,5 @@
 HEALTH_COLOR = Gosu::Color.rgb(85, 255, 0)
-STAMINA_COLOR = Gosu::Color.argb(0xff_00ffff)
-ATTACK_COLOR = Gosu::Color::RED 
+STAMINA_COLOR = Gosu::Color::RED 
 
 class Interface
     attr_accessor :difficulty, :score
@@ -14,35 +13,29 @@ class Interface
         @score.round
     end
 
-    def draw_player_status(player_health, player_stamina, player_cooldown)
+    def draw_player_status(player_health, player_stamina)
         Gosu::Image.new("media/interface/heart.png").draw_rot(20, 45, ZOrder::UI, 0)
         Gosu.draw_quad(
             40, 30, Gosu::Color::YELLOW, 
-            40, 80, Gosu::Color::YELLOW, 
+            40, 90, Gosu::Color::YELLOW, 
             45, 30, Gosu::Color::YELLOW, 
-            45, 80, Gosu::Color::YELLOW, ZOrder::UI)
+            45, 90, Gosu::Color::YELLOW, ZOrder::UI)
         Gosu.draw_quad(
             45, 30, HEALTH_COLOR, 
             45, 60, HEALTH_COLOR, 
-            45 + (player_health / difficulty.to_f) * 170, 30, HEALTH_COLOR, 
-            45 + (player_health / difficulty.to_f) * 170, 60, HEALTH_COLOR, ZOrder::UI)
+            45 + (player_health / 100.to_f) * 210, 30, HEALTH_COLOR, 
+            45 + (player_health / 100.to_f) * 210, 60, HEALTH_COLOR, ZOrder::UI)
 
         Gosu.draw_quad(
             45, 60, STAMINA_COLOR, 
-            45, 70, STAMINA_COLOR, 
-            45 + (player_stamina / difficulty.to_f) * 170, 60, STAMINA_COLOR, 
-            45 + (player_stamina / difficulty.to_f) * 170, 70, STAMINA_COLOR, ZOrder::UI)
+            45, 90, STAMINA_COLOR, 
+            45 + (player_stamina / 100.to_f) * 210, 60, STAMINA_COLOR, 
+            45 + (player_stamina / 100.to_f) * 210, 90, STAMINA_COLOR, ZOrder::UI)
         Gosu.draw_quad(
-            45, 70, ATTACK_COLOR, 
-            45, 80, ATTACK_COLOR, 
-            45 + (player_cooldown / difficulty.to_f) * 170, 70, ATTACK_COLOR, 
-            45 + (player_cooldown / difficulty.to_f) * 170, 80, ATTACK_COLOR, ZOrder::UI)
-        Gosu.draw_quad(
-            210, 30, Gosu::Color::YELLOW, 
-            210, 80, Gosu::Color::YELLOW, 
-            215, 30, Gosu::Color::YELLOW, 
-            215, 80, Gosu::Color::YELLOW, ZOrder::UI)
-        Gosu.draw_line(45, 60, Gosu::Color::BLUE, 210, 60, Gosu::Color::BLUE, ZOrder::UI, mode=:default)
+            255, 30, Gosu::Color::YELLOW, 
+            255, 90, Gosu::Color::YELLOW, 
+            260, 30, Gosu::Color::YELLOW, 
+            260, 90, Gosu::Color::YELLOW, ZOrder::UI)
     end
 
 
@@ -61,11 +54,12 @@ class Interface
         end
         
         Gosu::Font.new(50).draw("WELCOME TO SANTA IN THE WOODS", 250, 100, ZOrder::UI, 1.0, 1.0, Gosu::Color::YELLOW)
-        Gosu::Font.new(50).draw("PLAY", 450, 200, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+        Gosu::Font.new(50).draw("PLAY", 450, 200, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
         Gosu::Font.new(50).draw("DIFFICULTY: ", 450, 300, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
         Gosu::Font.new(50).draw(difficulty, 730, 300, ZOrder::UI, 1.0, 1.0, difficulty_color )
         Gosu::Font.new(50).draw("HIGH SCORE: #{high_score.round}", 450, 400, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
-        Gosu::Font.new(50).draw("EXIT", 450, 500, ZOrder::UI, 1.0, 1.0, Gosu::Color::RED)
+        Gosu::Font.new(50).draw("HOW TO PLAY", 450, 500, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+        Gosu::Font.new(50).draw("EXIT", 450, 600, ZOrder::UI, 1.0, 1.0, Gosu::Color::RED)
     end
 
     def draw_pause_options(pause_message, prompt)
@@ -78,6 +72,15 @@ class Interface
         Gosu::Font.new(50).draw("SCORE: #{@score.round}", 450, 300, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
         Gosu::Font.new(50).draw(prompt, 450, 400, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
         Gosu::Font.new(50).draw('QUIT', 450, 500, ZOrder::UI, 1.0, 1.0, Gosu::Color::RED)
+    end
+
+    def draw_tutorial
+        Gosu::Font.new(60).draw("HOW TO PLAY", 450, 70, ZOrder::UI, 1.0, 1.0, Gosu::Color::YELLOW)
+        Gosu::Font.new(50).draw("Press W to jump (costs stamina)", 300, 200, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+        Gosu::Font.new(50).draw("Press S to attack enemies", 300, 300, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+        Gosu::Font.new(50).draw("Ground monsters drain your health", 300, 400, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+        Gosu::Font.new(50).draw("Aerial monsters drain your stamina", 300, 500, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
+        Gosu::Font.new(50).draw("Back to Menu", 450, 600, ZOrder::UI, 1.0, 1.0, Gosu::Color::RED)
     end
 
     def draw_score

@@ -1,80 +1,80 @@
+
 class Map
 
     def initialize
         @bg = Gosu::Image.new("media/backgrounds/bg_color.png")
-        @far1 = @far2 = Gosu::Image.new("media/backgrounds/far.png")
-        @mid1 = @mid2 = Gosu::Image.new("media/backgrounds/mid.png")
-        @ground1 = @ground2 = Gosu::Image.new("media/backgrounds/ground.png")
-        @close1 = @close2 = Gosu::Image.new("media/backgrounds/close.png")
-        @far_x1 = @mid_x1 = @close_x1 = @ground_x1 = WIDTH / 2
-        @far_x2 = @mid_x2 = @close_x2 = WIDTH / 2 + FULL_BACKGROUND_WIDTH * 1.9
-        @ground_x2 = WIDTH / 2 + 2970
-    end
+        @farground = Gosu::Image.new("media/backgrounds/far.png", :tileable => true)
+        @midground = Gosu::Image.new( "media/backgrounds/mid.png", :tileable => true)
+        @ground = Gosu::Image.new("media/backgrounds/ground.png",:tileable => true)
+        @closeground = Gosu::Image.new( "media/backgrounds/close.png", :tileable => true)
+
+        @farground_x = @midground_x = @closeground_x = @ground_x = 0
+   end
 
     def draw
         @bg.draw_rot(WIDTH / 2, 400, ZOrder::BACKGROUND1, 0)
+        draw_farground
+        draw_midground
+        draw_closeground
+        draw_ground
+    end
 
-        @far1.draw_rot(@far_x1, HEIGHT / 2, ZOrder::BACKGROUND2, 0)
-        @mid1.draw_rot(@mid_x1, HEIGHT / 2, ZOrder::BACKGROUND3, 0)
-        @close1.draw_rot(@close_x1, HEIGHT / 2, ZOrder::BACKGROUND4, 0)
+    def draw_farground
+        @farground.draw(@farground_x, 0, ZOrder::BACKGROUND3)
+        @farground.draw(@farground_x + @farground.width , 0, ZOrder::BACKGROUND3)
+    end
 
-        @far2.draw_rot(@far_x2, HEIGHT / 2, ZOrder::BACKGROUND2, 0)
-        @mid2.draw_rot(@mid_x2, HEIGHT / 2, ZOrder::BACKGROUND3, 0)
-        @close2.draw_rot(@close_x2, HEIGHT / 2, ZOrder::BACKGROUND4, 0)
+    def draw_midground
+        @midground.draw(@midground_x, 0, ZOrder::BACKGROUND3)
+        @midground.draw(@midground_x + @midground.width , 0, ZOrder::BACKGROUND3)
+    end
 
-        @ground1.draw_rot(@ground_x1, 755, ZOrder::GROUND,0 )
-        @ground2.draw_rot(@ground_x2, 755, ZOrder::GROUND,0 )
+    def draw_closeground
+        @closeground.draw(@closeground_x, 0, ZOrder::BACKGROUND3)
+        @closeground.draw(@closeground_x + @closeground.width ,0, ZOrder::BACKGROUND3)
+    end
+
+    def draw_ground
+        @ground.draw(@ground_x, 700, ZOrder::GROUND)
+        @ground.draw(@ground_x + @ground.width, 700, ZOrder::GROUND)
     end
     
-    def roll
-        
-        if @far_x1 < -FULL_BACKGROUND_WIDTH
-            @far_x1 = FULL_BACKGROUND_WIDTH * 1.8
-        else
-            @far_x1 -= 1
-        end
+    def update
+        roll_farground
+        roll_midground
+        roll_closeground
+        roll_ground
+    end
 
-        if @far_x2 < -FULL_BACKGROUND_WIDTH
-            @far_x2 = FULL_BACKGROUND_WIDTH * 1.8 
+    def roll_farground
+        if @farground_x <= -@farground.width 
+            @farground_x = 0
         else
-            @far_x2 -= 1
+            @farground_x -= 1
         end
+    end
 
-        if @mid_x1 < -FULL_BACKGROUND_WIDTH
-            @mid_x1 = FULL_BACKGROUND_WIDTH * 1.8
+    def roll_midground
+        if @midground_x <= -@midground.width 
+            @midground_x = 0
         else
-            @mid_x1 -= 1.5
+            @midground_x -= 1.5
         end
+    end
 
-        if @mid_x2 < -FULL_BACKGROUND_WIDTH
-            @mid_x2 = FULL_BACKGROUND_WIDTH * 1.8 
+    def roll_closeground
+        if @closeground_x <= -@closeground.width
+            @closeground_x = 0
         else
-            @mid_x2 -= 1.5
+            @closeground_x -= 2
         end
+    end
 
-        if @close_x1 < -FULL_BACKGROUND_WIDTH
-            @close_x1 = FULL_BACKGROUND_WIDTH * 1.8 
+    def roll_ground
+        if @ground_x <= -@ground.width
+            @ground_x = 0
         else
-            @close_x1 -= 2
+            @ground_x -= 2
         end
-
-        if @close_x2 < -FULL_BACKGROUND_WIDTH
-            @close_x2 = FULL_BACKGROUND_WIDTH * 1.8
-        else
-            @close_x2 -= 2
-        end
-
-        if @ground_x1 <= -2970/2
-            @ground_x1 = 2970 * 1.5
-        else
-            @ground_x1 -= 2
-        end
-
-        if @ground_x2 <= -2970/2
-            @ground_x2 = 2970 * 1.5
-        else
-            @ground_x2 -= 2
-        end
-
     end
 end
