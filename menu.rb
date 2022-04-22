@@ -53,7 +53,7 @@ class Interface
             difficulty_color = Gosu::Color::RED
         end
         
-        Gosu::Font.new(50).draw("WELCOME TO SANTA IN THE WOODS", 250, 100, ZOrder::UI, 1.0, 1.0, Gosu::Color::YELLOW)
+        Gosu::Font.new(50).draw("WELCOME TO FOREST SANTA", 250, 100, ZOrder::UI, 1.0, 1.0, Gosu::Color::YELLOW)
         Gosu::Font.new(50).draw("PLAY", 450, 200, ZOrder::UI, 1.0, 1.0, Gosu::Color::GREEN)
         Gosu::Font.new(50).draw("DIFFICULTY: ", 450, 300, ZOrder::UI, 1.0, 1.0, Gosu::Color::WHITE)
         Gosu::Font.new(50).draw(difficulty, 730, 300, ZOrder::UI, 1.0, 1.0, difficulty_color )

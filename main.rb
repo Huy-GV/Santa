@@ -142,9 +142,9 @@ class SantaGame < Gosu::Window
         @santa.run_on_ground
       else
         @platform_set.each(&:move)
-        @platform_set.reject! {|platform| platform.x < -110 }
-        # ! there is an unknown nil class bug here ( no x method for nil class)
-        if in_platform_range?(@santa.y, @platform_set[0].x)
+        @platform_set.reject! { |platform| platform.x < -110 }
+        
+        if !@platform_set.empty? && in_platform_range?(@santa.y, @platform_set[0].x)
           @santa.run_on_platform
         else
           @santa.run_on_ground
@@ -156,6 +156,7 @@ class SantaGame < Gosu::Window
           aerial_monster.move
           @santa.lose_stamina(@aerial_monster_damage) if in_fly_range?(aerial_monster.x, @santa.y)
         }
+
         @aerial_monster_horde.reject!{ |fly| fly.x < -30 }
       end
 

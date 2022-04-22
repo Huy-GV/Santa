@@ -55,9 +55,6 @@ class Demon < Monster
     super
     get_sprites
     get_movement_sprites(@action)
-    puts 'move image:'
-    puts @move_image
-    puts 'gets called in subclass'
     set_initial_sprites
   end
 
@@ -76,8 +73,6 @@ class Demon < Monster
       @move_image = Gosu::Image.load_tiles('../media/monsters/demon_moving.png', 1926 / 6, 320)
     end
 
-    puts 'move image in get movement sprite: '
-    puts @move_image
   end
 end
 
